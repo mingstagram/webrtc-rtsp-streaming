@@ -1,0 +1,10 @@
+server:
+  port: 8080  # Spring Boot API 서버 포트
+
+#janus:
+#  base-url: "http://192.168.5.61:8088/janus"  # Janus API 서버 주소
+#  ws-url: "ws://192.168.5.61:8188"  # WebSocket API 주소
+#  streaming-mountpoint: "rtsp-stream"  # Janus Streaming Plugin에서 사용할 마운트 이름
+
+janus:
+  server-url: "http://192.168.5.61:8088/janus"

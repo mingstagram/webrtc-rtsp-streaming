@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTSP 스트리밍 웹 플레이어</title>
+
+    <!-- Video.js & HLS.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.14.3/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.15.0/videojs-contrib-hls.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.14.3/video-js.min.css" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            background-color: #4F46E5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #4338CA;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container text-center">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">📹 RTSP 스트리밍 플레이어</h1>
+
+    <button id="startBtn" onclick="startStreaming()" class="btn">🎬 스트리밍 시작</button>
+    <button id="stopBtn" onclick="stopStreaming()" class="btn hidden">🛑 스트리밍 중지</button>
+
+    <p id="status-message" class="text-gray-600 mt-4"></p>
+
+    <!-- Video Player -->
+    <div class="mt-6">
+        <video id="video-player" class="video-js vjs-default-skin w-full rounded-lg shadow-lg" controls autoplay>
+            <source id="video-source" src="" type="application/x-mpegURL">
+        </video>
+    </div>
+</div>
+
+<script>
+    const videoElement = document.getElementById('video-player');
+    const videoSource = document.getElementById('video-source');
+    const statusMessage = document.getElementById('status-message');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    async function startStreaming() {
+        try {
+            startBtn.disabled = true;
+            statusMessage.innerText = "⏳ 스트리밍을 시작하는 중...";
+
+            let response = await fetch("http://localhost:8080/stream/start", { method: "POST" });
+
+            if (response.ok) {
+                statusMessage.innerText = "✅ 스트리밍이 시작되었습니다.";
+                stopBtn.classList.remove("hidden");
+                startBtn.disabled = true;
+
+                // 2초 후 스트리밍 URL 자동 설정
+                setTimeout(async () => {
+                    let streamResponse = await fetch("http://localhost:8080/stream/hls");
+                    let streamUrl = await streamResponse.text();
+
+                    videoSource.src = streamUrl;
+                    videoElement.load();
+
+                    // 비디오 로드 후 강제 재생
+                    setTimeout(() => {
+                        videoElement.play().catch(error => console.error("🚨 비디오 재생 오류:", error));
+                    }, 500);
+                }, 2000);
+            } else {
+                statusMessage.innerText = "❌ 스트리밍 시작 실패!";
+                startBtn.disabled = false;
+            }
+        } catch (error) {
+            statusMessage.innerText = "❌ 스트리밍 시작 오류 발생!";
+            console.error("스트리밍 시작 오류:", error);
+            startBtn.disabled = false;
+        }
+    }
+
+    async function stopStreaming() {
+        try {
+            stopBtn.disabled = true;
+            statusMessage.innerText = "⏳ 스트리밍을 중지하는 중...";
+
+            let response = await fetch("http://localhost:8080/stream/stop", { method: "POST" });
+
+            if (response.ok) {
+                statusMessage.innerText = "🛑 스트리밍이 중지되었습니다.";
+                videoElement.pause();
+                videoSource.src = "";
+                videoElement.load();
+                stopBtn.classList.add("hidden");
+                startBtn.disabled = false;
+            } else {
+                statusMessage.innerText = "❌ 스트리밍 중지 실패!";
+                stopBtn.disabled = false;
+            }
+        } catch (error) {
+            statusMessage.innerText = "❌ 스트리밍 중지 오류 발생!";
+            console.error("스트리밍 중지 오류:", error);
+            stopBtn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
