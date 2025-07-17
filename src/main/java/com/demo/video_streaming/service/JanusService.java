@@ -89,7 +89,9 @@ public class JanusService {
                             body.put("request", "create");
                             body.put("id", 1);
                             body.put("type", "rtsp");
-                            body.put("rtsp", "rtsp://admin:admin@192.168.10.10:554/media/1/1/Profile1");
+                            body.put("url", "rtsp://192.168.10.48:554/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif");
+                            body.put("rtsp_user", "admin");
+                            body.put("rtsp_pwd", "1q2w3e4r");
                             body.put("rtsp_transport", "tcp");
                             body.put("video", true);
                             body.put("audio", false);
